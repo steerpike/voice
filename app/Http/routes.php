@@ -10,5 +10,6 @@
 | and give it the controller to call when that URI is requested.
 |
 */
-
-Route::get('/', 'WelcomeController@index');
+Route::get('/', 'SentimentController@index');
+Route::get('/gather', 'GatherController@whirlpool');
+Route::get('/sentiment', 'GatherController@sentiment');
