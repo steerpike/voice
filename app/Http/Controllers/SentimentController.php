@@ -7,7 +7,9 @@ class SentimentController extends Controller {
 
 	public function index()
 	{
-		return Statement::all();
+		$statements = Statement::all();
+		//dd($statements);
+		return view('voices');
 	}
 
 
