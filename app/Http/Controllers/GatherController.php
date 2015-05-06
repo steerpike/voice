@@ -2,60 +2,102 @@
 
 use PHPHtmlParser\Dom;
 use App;
+use Illuminate\Http\Request;
 use App\Statement;
 class GatherController extends Controller {
 
 
-	public function whirlpool()
+	public function whirlpool(Request $request)
 	{
-		//$fb = App::make('SammyK\LaravelFacebookSdk\LaravelFacebookSdk');
 		//Alchemy API key: 45cc3141676b2ecb9466fe028749d685cfe6e776
 		//http://access.alchemyapi.com/calls/html/HTMLGetTextSentiment
-		$dom = new Dom;
-
-		$forum = 'http://forums.whirlpool.net.au/forum-replies.cfm?t=2402456';
-		//$forum = 'http://forums.whirlpool.net.au/forum-replies.cfm?t=2383866&p=18';
-		$html = $this->gather($forum);
-		$dom->load($html);
-		$replies = $dom->find('.reply');
-		foreach($replies as $reply) 
+		if ($request->route('id'))
 		{
-			$domtext = new Dom;
-			$domtext->load($reply->innerHtml);
-			$author = $domtext->find('.username .bu_name')->text;
-			$date = $domtext->find('.date')->text;
-			$date = $this->parsedate($date);
-			$url = $domtext->find('a')[2]->getAttribute('href');
-			$content = strip_tags($domtext->find('.replytext')->innerHtml);
-			$statement = new Statement;
-			$statement->author = $author;
-			$statement->content = $content;
-			$statement->url = $url;
-			$statement->published = $date;
-			$statement->save();
+			$dom = new Dom;
+			$thread = 'http://forums.whirlpool.net.au/forum-replies.cfm?t='.$request->route('id');
+			$html = $this->gather($thread);
+			$dom->load($html);
+			$replies = $dom->find('.reply');
+			foreach($replies as $reply) 
+			{
+				$domtext = new Dom;
+				$domtext->load($reply->innerHtml);
+				$author = $domtext->find('.username .bu_name')->text;
+				$date = $domtext->find('.date')->text;
+				$date = $this->parsedate($date);
+				$url = $domtext->find('a')[2]->getAttribute('href');
+				$content = strip_tags($domtext->find('.replytext')->innerHtml);
+				$statement = new Statement;
+				$statement->author = $author;
+				$statement->thread = $thread;
+				$statement->site = 'Whirlpool';
+				$statement->content = $content;
+				$statement->url = 'http://forums.whirlpool.net.au/'.$url;
+				$statement->published = $date;
+				$statement->save();
+			}
+			return 'Inserted '.count($replies).' records';
 		}
+	}
+	public function facebook(Request $request) {
+		//https://graph.facebook.com/{post_id}/comments?access_token={access_token}
+		//https://graph.facebook.com/{post_id}/comments
+		$token = $this->gather("https://graph.facebook.com/oauth/".
+			"access_token?grant_type=client_credentials&client_id=".getenv('FACEBOOK_APP_ID')."&".
+			"client_secret=".getenv('FACEBOOK_APP_SECRET'));
+		if ($request->route('id'))
+		{
+			$id = $request->route('id');
+			$thread = 'https://www.facebook.com/vodafoneau/posts/'.$id;
+			$comments = json_decode($this->gather('https://graph.facebook.com/'.$id.'/comments?'.$token));		
+			foreach($comments->data as $comment) 
+			{
+				$statement = new Statement;
+				if($comment->from->name=="Vodafone Australia")
+				{
+					continue; //skip out here and gte the next one
+				}
+				$statement->author = $comment->from->name;
+				$statement->thread = $thread;
+				$statement->site = 'facebook';
+				$statement->content = $comment->message;
+				$split = explode('_',$comment->id);
+				$url = $thread.'?comment_id='.$split[1];
+				$statement->url = $url;
+				$statement->published = $comment->created_time;
+				$statement->save();
+			}
+			return 'Inserted '.count($comments).' records';
+		}
+
 	}
 	public function sentiment() 
 	{
-		$statements = Statement::all();
+		$statements = Statement::where('sentiment','=', null)->get();
 		foreach($statements as $statement)
 		{
 			$url = 'http://access.alchemyapi.com/calls/html/HTMLGetTextSentiment?'.
 			'apikey=f76a71f030cc99780f960dab560d9ddc8aa8eaa2&outputMode=json&'.
 			'html='.urlencode($statement->content);
 			$response = json_decode($this->gather($url));
-			$statement->sentiment = $response->docSentiment->score;
+			if(property_exists($response->docSentiment, 'score')) 
+			{
+				$statement->sentiment = $response->docSentiment->score;
+			} else {
+				$statement->sentiment = 0;
+			}
 			$statement->sentiment_label = $response->docSentiment->type;
 			$statement->save();
 		}
+		return 'Updated '.count($statements).' records';
 	}
 	public function gather($url) 
 	{
 		$ch = curl_init();
 		$proxy = "https://localhost:8080";
 		curl_setopt($ch, CURLOPT_URL, $url);//return the transfer as a string
-        //curl_setopt($ch, CURLOPT_PROXY, 'wwwproxy.vodafone.com.au');
-	    //curl_setopt($ch, CURLOPT_PROXYUSERPWD, 'DwyerS:tBa5tdgag4');
+        curl_setopt($ch, CURLOPT_PROXY, 'wwwproxy.vodafone.com.au');
+	    curl_setopt($ch, CURLOPT_PROXYUSERPWD, 'DwyerS:tBa5tdgag4');
 	    curl_setopt($ch, CURLOPT_PROXYPORT, 8080);
         //curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

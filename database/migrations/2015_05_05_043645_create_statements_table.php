@@ -18,6 +18,8 @@ class CreateStatementsTable extends Migration {
 			$table->string('author')->nullable();
 			$table->longText('content')->nullable();
 			$table->string('url')->nullable();
+			$table->string('thread')->nullable();
+			$table->string('site')->nullable();
 			$table->string('sentiment_label')->nullable();
 			$table->float('sentiment')->nullable();
 			$table->dateTime('published')->nullable();
