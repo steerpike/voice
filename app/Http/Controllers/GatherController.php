@@ -67,7 +67,7 @@ class GatherController extends Controller {
 				$statement->published = $comment->created_time;
 				$statement->save();
 			}
-			return 'Inserted '.count($comments).' records';
+			return 'Inserted '.count($comments->data).' records';
 		}
 
 	}
@@ -80,14 +80,17 @@ class GatherController extends Controller {
 			'apikey=f76a71f030cc99780f960dab560d9ddc8aa8eaa2&outputMode=json&'.
 			'html='.urlencode($statement->content);
 			$response = json_decode($this->gather($url));
-			if(property_exists($response->docSentiment, 'score')) 
+			if($response->status !="ERROR") 
 			{
-				$statement->sentiment = $response->docSentiment->score;
-			} else {
-				$statement->sentiment = 0;
+				if(property_exists($response->docSentiment, 'score')) 
+				{
+					$statement->sentiment = $response->docSentiment->score;
+				} else {
+					$statement->sentiment = 0;
+				}
+				$statement->sentiment_label = $response->docSentiment->type;
+				$statement->save();
 			}
-			$statement->sentiment_label = $response->docSentiment->type;
-			$statement->save();
 		}
 		return 'Updated '.count($statements).' records';
 	}

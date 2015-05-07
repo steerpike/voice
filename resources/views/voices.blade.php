@@ -16,7 +16,7 @@
 	<nav class="navbar navbar-inverse navbar-fixed-top">
     	<div class="container-fluid">
         	<div class="navbar-header">
-				<h1 class="voda">Voice of the Customer</h1>
+				<h1 class="voda">Voice of the Customer (Beta) </h1>
 			</div>
 		</div>
 	</nav>
@@ -34,6 +34,11 @@
 			<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
 				<h1 class="page-header">Dashboard</h1>
 				<div class="row placeholders">
+				<div class="col-xs-6 col-sm-3 placeholder">
+		            	<img data-src="holder.js/200x200/auto/sky" class="img-responsive" alt="Generic placeholder thumbnail">
+		            	<h4>Total comments</h4>
+		            	<span class="text-muted">{{count($statements)}}</span>
+		            </div>
 					<div class="col-xs-6 col-sm-3 placeholder">
 		            	<img data-src="holder.js/200x200/auto/sky" class="img-responsive" alt="Generic placeholder thumbnail">
 		            	<h4>Highest comment</h4>
@@ -56,10 +61,10 @@
 							<tr>
 								<th>Sentiment</th>
 								<th>Site</th>
-								<th>Thread</th>
 								<th>Link</th>
 								<th>Author</th>
 								<th>Published</th>
+								<th>Comment</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -67,10 +72,10 @@
 							<tr>
 								<td>{{$statement->sentiment}}</td>
 								<td>{{$statement->site}}</td>
-								<td><a href="{{$statement->thread}}">{{$statement->thread}}</a></td>
-								<td><a href='{{$statement->url}}'>{{$statement->url}}</a></td>
+								<td><a href='{{$statement->url}}'>Direct link</a></td>
 								<td>{{$statement->author}}</td>
 								<td>{{$statement->published}}</td>
+								<td>{{$statement->content}}</td>
 							</tr>
 						@endforeach
 						</tbody>
