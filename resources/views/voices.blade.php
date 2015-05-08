@@ -74,7 +74,7 @@
 								<td>{{$statement->site}}</td>
 								<td><a href='{{$statement->url}}'>Direct link</a></td>
 								<td>{{$statement->author}}</td>
-								<td>{{$statement->published}}</td>
+								<td>{{ $statement->published->format('d-m-Y H:i:s') }}</td>
 								<td>{{$statement->content}}</td>
 							</tr>
 						@endforeach

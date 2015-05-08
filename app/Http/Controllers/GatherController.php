@@ -25,16 +25,17 @@ class GatherController extends Controller {
 				$author = $domtext->find('.username .bu_name')->text;
 				$date = $domtext->find('.date')->text;
 				$date = $this->parsedate($date);
-				$url = $domtext->find('a')[2]->getAttribute('href');
+				$hash = $domtext->find('a')[2]->getAttribute('href');
 				$content = strip_tags($domtext->find('.replytext')->innerHtml);
+				$url = 'http://forums.whirlpool.net.au/'.$hash;
+				$site = 'whirlpool';
 				$statement = new Statement;
-				$statement->author = $author;
-				$statement->thread = $thread;
-				$statement->site = 'Whirlpool';
-				$statement->content = $content;
-				$statement->url = 'http://forums.whirlpool.net.au/'.$url;
-				$statement->published = $date;
-				$statement->save();
+				$model = $statement::firstOrCreate(['author'=>$author, 
+					'content'=>$content,
+					'url'=>$url,
+					'thread'=>$thread,
+					'site'=>$site, 
+					'published'=>$date]);
 			}
 			return 'Inserted '.count($replies).' records';
 		}
@@ -94,6 +95,25 @@ class GatherController extends Controller {
 		}
 		return 'Updated '.count($statements).' records';
 	}
+
+	public function spider() 
+	{
+		
+		$url = 'http://forums.whirlpool.net.au/forum/114?g=141';
+		$dom = new Dom;
+		$html = $this->gather($url);
+		$dom->load($html);
+
+		$threads = $dom->find('#threads');
+		$rows = $threads->find('table tr');
+		foreach($rows as $row) 
+		{
+			$thread = $row->find('td a.title')->getAttribute('href');
+			$updated_string = $row->find('td.newest span')->text;
+			$last_page = $row->find('td.goend a')->getAttribute('href');
+			print_r($thread.' '.$updated_string.' '.$last_page.'<br />');
+		}
+	}
 	public function gather($url) 
 	{
 		$ch = curl_init();
@@ -120,6 +140,13 @@ class GatherController extends Controller {
 				$date = str_replace('at', '', trim($date));
 				$date = str_replace(' pm', 'pm', $date);
 				$date = str_replace(' am', 'am', $date);
+				if(strpos($date, 'Monday')===0 ||  strpos($date, 'Tuesday')===0 || 
+					strpos($date, 'Wednesday')===0 || strpos($date, 'Thursday')===0 ||
+					strpos($date, 'Friday')===0)
+				{
+					$date = 'last '.$date;
+				}
+				//echo($date.'<br />');
 				$date = strtotime($date);
 				$date = date('d-m-Y H:i:s', $date);
 			}

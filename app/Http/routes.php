@@ -14,3 +14,4 @@ Route::get('/', 'SentimentController@index');
 Route::get('/whirlpool/{id?}', 'GatherController@whirlpool');
 Route::get('/facebook/{id?}', 'GatherController@facebook');
 Route::get('/sentiment', 'GatherController@sentiment');
+Route::get('/spider', 'GatherController@spider');
