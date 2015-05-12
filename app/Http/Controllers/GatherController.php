@@ -4,6 +4,8 @@ use PHPHtmlParser\Dom;
 use App;
 use Illuminate\Http\Request;
 use App\Statement;
+use App\Spider;
+use Carbon\Carbon;
 class GatherController extends Controller {
 
 
@@ -98,21 +100,26 @@ class GatherController extends Controller {
 
 	public function spider() 
 	{
-		
-		$url = 'http://forums.whirlpool.net.au/forum/114?g=141';
+		$spider = Spider::firstOrNew(array('site'=>'http://forums.whirlpool.net.au/forum/114?g=141'));
+		$spider->site='http://forums.whirlpool.net.au/forum/114?g=141';
 		$dom = new Dom;
-		$html = $this->gather($url);
+		$html = $this->gather($spider->site);
 		$dom->load($html);
-
 		$threads = $dom->find('#threads');
 		$rows = $threads->find('table tr');
+
 		foreach($rows as $row) 
 		{
 			$thread = $row->find('td a.title')->getAttribute('href');
 			$updated_string = $row->find('td.newest span')->text;
 			$last_page = $row->find('td.goend a')->getAttribute('href');
-			print_r($thread.' '.$updated_string.' '.$last_page.'<br />');
+			$latest = $this->parsedate($updated_string);
+				print_r($thread.' '.$latest.' '.$last_page.'<br />');
+	
+			
 		}
+		$spider->save();
+		dd($spider);
 	}
 	public function gather($url) 
 	{
