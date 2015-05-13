@@ -96,9 +96,9 @@ class GatherController extends Controller {
 		$ch = curl_init();
 		$proxy = "https://localhost:8080";
 		curl_setopt($ch, CURLOPT_URL, $url);//return the transfer as a string
-        curl_setopt($ch, CURLOPT_PROXY, 'wwwproxy.vodafone.com.au');
-	    curl_setopt($ch, CURLOPT_PROXYUSERPWD, 'DwyerS:tBa5tdgag4');
-	    curl_setopt($ch, CURLOPT_PROXYPORT, 8080);
+        //curl_setopt($ch, CURLOPT_PROXY, 'wwwproxy.vodafone.com.au');
+	    //curl_setopt($ch, CURLOPT_PROXYUSERPWD, 'DwyerS:tBa5tdgag4');
+	    //curl_setopt($ch, CURLOPT_PROXYPORT, 8080);
         //curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_REFERER, 'http://vodafone.com.au');
