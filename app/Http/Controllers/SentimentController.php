@@ -8,9 +8,10 @@ class SentimentController extends Controller {
 
 	public function index()
 	{
-		$statements = Statement::orderBy('published', 'ASC')->get();
-		$highest = Statement::orderBy('sentiment', 'DESC')->first();
-		$lowest = Statement::orderBy('sentiment', 'ASC')->first();
+		$statements = Statement::whereNotNull('sentiment')->orderBy('published', 'DESC')->get();
+		//dd($statements);
+		$highest = Statement::whereNotNull('sentiment')->orderBy('sentiment', 'DESC')->first();
+		$lowest = Statement::whereNotNull('sentiment')->orderBy('sentiment', 'ASC')->first();
 		$average = DB::table('statements')->avg('sentiment');
 		if(!$statements || !$highest || !$lowest || !$average) {
 			return 'Empty DB';
